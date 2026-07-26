@@ -3,8 +3,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { motion, useScroll, useSpring } from 'framer-motion';
-import { ArrowLeft, Clock, BookOpen } from 'lucide-react';
+import { motion, useScroll, useSpring, useTransform } from 'framer-motion';
+import { ArrowLeft, Clock, BookOpen, BookMarked } from 'lucide-react';
 import { getStoryBySlug, getRelatedStories, badgeMeta } from '@/lib/stories';
 import { LogoIcon } from '@/lib/logos';
 import { ThemeToggle } from '@/components/theme-toggle';
@@ -15,6 +15,10 @@ import { DecisionChallenge } from '@/components/decision-challenge';
 import { Reflection } from '@/components/reflection';
 import { ShareCTA } from '@/components/share-cta';
 import { RelatedStories } from '@/components/related-stories';
+import { EditorialIllustration } from '@/components/editorial-illustration';
+import { ReadingStreak } from '@/components/reading-streak';
+import { QuickCapture } from '@/components/quick-capture';
+import { recordStoryRead } from '@/lib/notebook';
 
 const CHAPTERS = [
   { key: 'openingScene', label: 'Opening Scene', num: '00' },
@@ -34,8 +38,22 @@ export default function StoryReader({ slug }) {
 
   const { scrollYProgress } = useScroll();
   const progress = useSpring(scrollYProgress, { stiffness: 120, damping: 30, mass: 0.2 });
+  const [readingProgress, setReadingProgress] = useState(0);
+  useEffect(() => {
+    const unsub = scrollYProgress.on('change', (v) => setReadingProgress(v));
+    return () => unsub();
+  }, [scrollYProgress]);
 
   const [active, setActive] = useState('openingScene');
+
+  // Record the read in localStorage for the streak once, on mount.
+  useEffect(() => {
+    if (!story) return;
+    try {
+      recordStoryRead(story.slug);
+      window.dispatchEvent(new Event('productlore:streak-updated'));
+    } catch {}
+  }, [story]);
 
   useEffect(() => {
     if (!story) return;
@@ -87,8 +105,17 @@ export default function StoryReader({ slug }) {
           </Link>
           <div className="flex items-center gap-3">
             <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
-              <BookOpen className="h-4 w-4" /> ProductLore
+              <Clock className="h-4 w-4" />
+              <span className="tabular-nums">~{Math.max(1, Math.round(story.readTime * (1 - readingProgress)))} min left</span>
             </div>
+            <ReadingStreak variant="compact" />
+            <Link
+              href="/notebook"
+              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-[hsl(var(--surface-1))] px-3 py-1 text-[12px] text-muted-foreground hover:text-foreground hover:border-foreground/40 transition-colors"
+            >
+              <BookMarked className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Notebook</span>
+            </Link>
             <ThemeToggle />
           </div>
         </div>
@@ -124,6 +151,16 @@ export default function StoryReader({ slug }) {
             “{story.hook}”
           </p>
 
+          <div className="mt-4">
+            <QuickCapture
+              storySlug={story.slug}
+              storyName={story.name}
+              text={`“${story.hook}”`}
+              source="hook"
+              label="Save this hook"
+            />
+          </div>
+
           <div className="mt-8 flex flex-wrap gap-1.5">
             {story.badges.map((b) => (
               <span
@@ -136,6 +173,11 @@ export default function StoryReader({ slug }) {
             ))}
           </div>
         </motion.div>
+      </section>
+
+      {/* Editorial illustration */}
+      <section className="container py-8">
+        <EditorialIllustration slug={story.slug} />
       </section>
 
       {/* Timeline (visual) */}
@@ -211,10 +253,32 @@ export default function StoryReader({ slug }) {
 
               {/* Interleave first quote after Failures & Pivots, second after Today */}
               {s.key === 'failuresAndPivots' && story.quotes?.[0] && (
-                <QuoteBlock text={story.quotes[0].text} by={story.quotes[0].by} />
+                <div>
+                  <QuoteBlock text={story.quotes[0].text} by={story.quotes[0].by} />
+                  <div className="-mt-8 mb-8">
+                    <QuickCapture
+                      storySlug={story.slug}
+                      storyName={story.name}
+                      text={`“${story.quotes[0].text}” — ${story.quotes[0].by}`}
+                      source="quote"
+                      label="Save this quote"
+                    />
+                  </div>
+                </div>
               )}
               {s.key === 'today' && story.quotes?.[1] && (
-                <QuoteBlock text={story.quotes[1].text} by={story.quotes[1].by} />
+                <div>
+                  <QuoteBlock text={story.quotes[1].text} by={story.quotes[1].by} />
+                  <div className="-mt-8 mb-8">
+                    <QuickCapture
+                      storySlug={story.slug}
+                      storyName={story.name}
+                      text={`“${story.quotes[1].text}” — ${story.quotes[1].by}`}
+                      source="quote"
+                      label="Save this quote"
+                    />
+                  </div>
+                </div>
               )}
             </div>
           ))}

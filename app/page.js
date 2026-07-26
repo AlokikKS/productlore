@@ -7,6 +7,9 @@ import { Search, ArrowUpRight, BookOpen, Sparkles } from 'lucide-react';
 import { stories, badgeMeta, smartSearch } from '@/lib/stories';
 import { LogoIcon } from '@/lib/logos';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { ReadingStreak } from '@/components/reading-streak';
+import { CollectionsRail } from '@/components/collections-rail';
+import { BookMarked } from 'lucide-react';
 
 function Logo() {
   return (
@@ -101,9 +104,17 @@ export default function Page() {
       <header className="sticky top-0 z-40 backdrop-blur-md bg-background/70 border-b border-border">
         <div className="container flex h-14 items-center justify-between">
           <Logo />
-          <nav className="flex items-center gap-4 sm:gap-6 text-sm text-muted-foreground">
+          <nav className="flex items-center gap-3 sm:gap-5 text-sm text-muted-foreground">
             <a href="#stories" className="hidden sm:inline hover:text-foreground transition-colors">Stories</a>
             <a href="#about" className="hidden sm:inline hover:text-foreground transition-colors">About</a>
+            <ReadingStreak variant="compact" />
+            <Link
+              href="/notebook"
+              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-[hsl(var(--surface-1))] px-3 py-1 text-[12px] text-muted-foreground hover:text-foreground hover:border-foreground/40 transition-colors"
+            >
+              <BookMarked className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Notebook</span>
+            </Link>
             <ThemeToggle />
           </nav>
         </div>
@@ -144,6 +155,8 @@ export default function Page() {
       </section>
 
       <div className="container"><div className="hairline" /></div>
+
+      <CollectionsRail />
 
       <section id="stories" className="container py-14 sm:py-20">
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-8 gap-4">

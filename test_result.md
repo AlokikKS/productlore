@@ -102,6 +102,113 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
+user_problem_statement: "ProductLore v3 \u2014 Duolingo-for-product-thinking. Add: Product Notebook (biggest new feature), Reading Streak, Collections, Editorial Illustrations, Reading Time Remaining, Quick-capture from stories, All Reflections view. No redesign, no backend, everything local."
+
+frontend:
+  - task: "Product Notebook \u2014 8-section Product Canvas + saved items from stories"
+    implemented: true
+    working: "NA"
+    file: "/app/app/notebook/page.js, /app/components/product-notebook.js, /app/lib/notebook.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        -working: "NA"
+        -agent: "main"
+        -comment: "New route /notebook renders Reading Streak widget + Product Canvas (Idea, Problem, Target User, MVP, Differentiator, Metrics, Risks, Next Experiment) as 8 textareas with debounced autosave to localStorage under key productlore:notebook:v1. Also renders 'Saved from stories' list (items captured via QuickCapture chip on story pages) and 'Your reflections' list (compiled from all productlore:reflection:<slug> keys). Please verify: canvas fields save on type and persist across reload; saved items appear once a QuickCapture chip is clicked on a story."
+
+  - task: "Reading Streak \u2014 localStorage-based streak counter with milestones"
+    implemented: true
+    working: "NA"
+    file: "/app/components/reading-streak.js, /app/lib/notebook.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        -working: "NA"
+        -agent: "main"
+        -comment: "Streak logic in /app/lib/notebook.js#recordStoryRead: uses ISO date, increments currentStreak on consecutive-day reads, resets otherwise, tracks longestStreak, totalDays, and set of storiesRead. Compact pill lives in landing/story/notebook nav. Full variant on /notebook shows day count, longest, total stories, and next milestone (1/3/7/14/30/60/100). Verify streak pill updates to 1 day after opening any story page, and persists on reload."
+
+  - task: "Collections \u2014 curated theme groups with dedicated route"
+    implemented: true
+    working: "NA"
+    file: "/app/app/collection/[id]/page.js, /app/components/collections-rail.js, /app/lib/collections.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        -working: "NA"
+        -agent: "main"
+        -comment: "7 collections: indian-innovation, marketplace, developer-tools, consumer, fintech, b2b-saas, ai. Server component with generateStaticParams so all collection routes are prebuilt. Rail on landing page below hero. Verify /collection/indian-innovation renders 10 stories, /collection/fintech renders 3 (zerodha, razorpay, cred)."
+
+  - task: "Editorial Illustrations \u2014 monochrome icon sequences per story"
+    implemented: true
+    working: "NA"
+    file: "/app/components/editorial-illustration.js, /app/lib/illustrations.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+        -working: "NA"
+        -agent: "main"
+        -comment: "Each story has an array of 3\u20134 lucide icon names in /app/lib/illustrations.js (e.g., netflix = ['Mail','Disc','Play','Clapperboard']). Renders as a horizontal card with icons connected by ChevronRight, appears between hero and timeline on each story page. Verify visible on /story/netflix and /story/apple."
+
+  - task: "Reading Time Remaining indicator in story reader header"
+    implemented: true
+    working: "NA"
+    file: "/app/app/story/[slug]/StoryReader.jsx"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+        -working: "NA"
+        -agent: "main"
+        -comment: "scrollYProgress subscription updates a state, header shows ~X min left computed from story.readTime * (1 - progress). Verify value decreases as user scrolls a story."
+
+  - task: "QuickCapture chip on story quotes/hook saves to notebook"
+    implemented: true
+    working: "NA"
+    file: "/app/components/quick-capture.js, /app/app/story/[slug]/StoryReader.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        -working: "NA"
+        -agent: "main"
+        -comment: "Chip 'Save this hook' below hero hook; 'Save this quote' below interleaved quote blocks. Click de-duplicates and stores in productlore:notebook:v1.savedItems. Verify clicking chip flips to 'Saved' state; opening /notebook shows the saved item under 'Saved from stories'."
+
+metadata:
+  created_by: "main_agent"
+  version: "1.2"
+  test_sequence: 3
+  run_ui: true
+
+test_plan:
+  current_focus:
+    - "Product Notebook \u2014 8-section Product Canvas + saved items from stories"
+    - "Reading Streak \u2014 localStorage-based streak counter with milestones"
+    - "Collections \u2014 curated theme groups with dedicated route"
+    - "QuickCapture chip on story quotes/hook saves to notebook"
+    - "Editorial Illustrations \u2014 monochrome icon sequences per story"
+    - "Reading Time Remaining indicator in story reader header"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+    -agent: "main"
+    -message: |
+      v3 features added on top of the working v2. No redesign; features layered in. Please verify the following (base URL: https://design-library-10.preview.emergentagent.com):
+
+      1) /notebook route: (a) confirm the Product Canvas renders 8 textareas; (b) type into the "The Idea" textarea and reload the page \u2014 the text must persist; (c) confirm the Reading Streak widget renders numbers.
+      2) /story/netflix: (a) confirm the editorial illustration row (Mail \u2192 Disc \u2192 Play \u2192 Clapperboard) is visible; (b) header shows "~N min left" with a clock icon; scroll halfway and confirm the number decreases; (c) click the "Save this hook" chip below the hook \u2014 confirm the chip flips to "Saved". Then navigate to /notebook and confirm the hook appears under "Saved from stories".
+      3) /collection/indian-innovation: confirm 10 story cards are visible (tata, reliance-jio, infosys, asian-paints, amul, zerodha, razorpay, freshworks, cred, postman). /collection/fintech confirms 3 (zerodha, razorpay, cred).
+      4) Streak: opening /story/apple should increment the reading-streak pill in the header. Refresh landing (/) \u2014 the streak pill should still show at least "1 day".
+      5) No regressions from v2: theme toggle still works, decision challenge still interactive, no hydration errors in console, no 502s under rapid navigation across /notebook, /collection/*, /story/*.
+
+      Ignore Next.js "output: standalone" warning \u2014 unrelated; runtime is fine.
+
+
 user_problem_statement: "ProductLore v2 — premium reader transformation. Bug reported: clicking on multiple story tiles gave a Cloudflare 502 Bad Gateway. The user asked for a permanently stable stack that can handle several concurrent users."
 
 frontend:
